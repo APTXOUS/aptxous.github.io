@@ -1,0 +1,1057 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+<script>
+    (function(){
+        if(''){
+            if (prompt('请输入文章密码') !== ''){
+                alert('密码错误！');
+                history.back();
+            }
+        }
+    })();
+</script>
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Hexo, NexT">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="Clickhouse部署高可用集群本文档内容包括：   Clickhouse的简介  Clickhouse的安装方式 使用rpm进行clickhouse安装 Clickhouse的重要目录 Clickhouse的基本配置   Clickhouse的集群部署方式 Zookeeper部署 Clickhouse高可用集群方案 clickhouse 单集群高可用方案部署 我使用的方案 复制表与分布表">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Clickhouse快速搭建高可用集群">
+<meta property="og:url" content="http://yoursite.com/2019/07/21/Clickhouse快速搭建高可用集群/index.html">
+<meta property="og:site_name" content="APTXOUS的个人小站">
+<meta property="og:description" content="Clickhouse部署高可用集群本文档内容包括：   Clickhouse的简介  Clickhouse的安装方式 使用rpm进行clickhouse安装 Clickhouse的重要目录 Clickhouse的基本配置   Clickhouse的集群部署方式 Zookeeper部署 Clickhouse高可用集群方案 clickhouse 单集群高可用方案部署 我使用的方案 复制表与分布表">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://yoursite.com/img/%E5%8C%85%E4%B8%80%E8%A7%88.png">
+<meta property="og:image" content="http://yoursite.com/img/%E5%8E%8B%E7%BC%A9%E5%8C%85.jpg">
+<meta property="og:image" content="http://yoursite.com/img/734555-20180723084839471-1357957382.png">
+<meta property="og:image" content="http://yoursite.com/2019/07/21/Clickhouse快速搭建高可用集群/img/734555-20180723114647876-24433769.png">
+<meta property="og:updated_time" content="2019-07-23T03:20:02.065Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Clickhouse快速搭建高可用集群">
+<meta name="twitter:description" content="Clickhouse部署高可用集群本文档内容包括：   Clickhouse的简介  Clickhouse的安装方式 使用rpm进行clickhouse安装 Clickhouse的重要目录 Clickhouse的基本配置   Clickhouse的集群部署方式 Zookeeper部署 Clickhouse高可用集群方案 clickhouse 单集群高可用方案部署 我使用的方案 复制表与分布表">
+<meta name="twitter:image" content="http://yoursite.com/img/%E5%8C%85%E4%B8%80%E8%A7%88.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2019/07/21/Clickhouse快速搭建高可用集群/">
+
+
+
+
+
+  <title>Clickhouse快速搭建高可用集群 | APTXOUS的个人小站</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">APTXOUS的个人小站</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/07/21/Clickhouse快速搭建高可用集群/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="APTXOUS">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="APTXOUS的个人小站">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Clickhouse快速搭建高可用集群</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-07-21T21:16:56+08:00">
+                2019-07-21
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="Clickhouse部署高可用集群"><a href="#Clickhouse部署高可用集群" class="headerlink" title="Clickhouse部署高可用集群"></a>Clickhouse部署高可用集群</h1><p>本文档内容包括： </p>
+<ul>
+<li>Clickhouse的简介 </li>
+<li>Clickhouse的安装方式<ul>
+<li>使用rpm进行clickhouse安装</li>
+<li>Clickhouse的重要目录</li>
+<li>Clickhouse的基本配置</li>
+</ul>
+</li>
+<li>Clickhouse的集群部署方式<ul>
+<li>Zookeeper部署</li>
+<li>Clickhouse高可用集群方案</li>
+<li>clickhouse 单集群高可用方案部署<ul>
+<li>我使用的方案</li>
+<li>复制表与分布表</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>常见问题</li>
+<li>shell 脚本（待写）</li>
+</ul>
+<h1 id="Clickhouse简介"><a href="#Clickhouse简介" class="headerlink" title="Clickhouse简介"></a>Clickhouse简介</h1><p>Clickhouse是一个用于联机分析处理（OLAP）的列式数据库管理系统（columnar DBMS）。  </p>
+<p>应用场景：</p>
+<blockquote>
+<ol>
+<li>绝大多数请求都是用于读访问的  </li>
+<li>数据需要以大批次（大于1000行）进行更新，不是单行更新；或者根本没有更新操作</li>
+<li>数据只是添加到数据库，没有必要修改</li>
+<li>读取数据时，会从数据库中提取出大量的行，但只用到一小部分列</li>
+<li>表很“宽”，即表中包含大量的列</li>
+<li>查询频率相对较低（通常每台服务器每秒查询数百次或更少）</li>
+<li>对于简单查询，允许大约50毫秒的延迟</li>
+<li>列的值是比较小的数值和短字符串（例如，每个&gt;URL只有60个字节）</li>
+<li>在处理单个查询时需要高吞吐量（每台服务器每秒&gt;高达数十亿行）</li>
+<li>不需要事务</li>
+<li>数据一致性要求较低</li>
+<li>每次查询中只会查询一个大表。除了一个大表，其&gt;余都是小表</li>
+<li>查询结果显著小于数据源。即数据有过滤或聚合。返回结果不超过单个服务器内存大小</li>
+</ol>
+</blockquote>
+<p>ClickHouse的限制</p>
+<blockquote>
+<ol>
+<li>不支持真正的删除/更新支持 不支持事务（期待后续版本支&gt;持）</li>
+<li>不支持二级索引</li>
+<li>有限的SQL支持，join实现与众不同</li>
+<li>不支持窗口功能</li>
+<li>元数据管理需要人工干预维护</li>
+</ol>
+</blockquote>
+<h1 id="Clickhouse的安装方式"><a href="#Clickhouse的安装方式" class="headerlink" title="Clickhouse的安装方式"></a>Clickhouse的安装方式</h1><h2 id="使用rpm进行ClickHouse的安装"><a href="#使用rpm进行ClickHouse的安装" class="headerlink" title="使用rpm进行ClickHouse的安装"></a>使用rpm进行ClickHouse的安装</h2><p>Clickhouse官方并没有提供centos的rpm包,我们可以使Altinity公司所提供的rpm包。<br>项目地址:<a href="https://packagecloud.io/Altinity/clickhouse" target="_blank" rel="noopener">https://packagecloud.io/Altinity/clickhouse</a><br>包一览<br> <img src="/img/%E5%8C%85%E4%B8%80%E8%A7%88.png" alt="包"><br>sftp到服务器，使用命令安装  rpm  -ivh clickhouse-*</p>
+<p>可能会报如下错误</p>
+<pre><code>root@localhost 7]# rpm -ivh clickhouse-common-static-18.14.13-1.el7.x86_64.rpm
+错误：依赖检测失败：libicudata.so.50()(64bit) 被 clickhouse-common-static-18.14.13-1.el7.x86_64 需要
+libicui18n.so.50()(64bit) 被 clickhouse-common-static-18.14.13-1.el7.x86_64 需要
+libicuuc.so.50()(64bit) 被 clickhouse-common-static-18.14.13-1.el7.x86_64 需要
+[root@localhost 7]# yum search libicu-last-50.1.2-17.el6.remi.x86_64.rpm</code></pre><p>这是因为缺失了libicu的相关依赖，使用命令安装</p>
+<pre><code>yum install libicu.x86_64</code></pre><p>也有可能会报下列错误</p>
+<pre><code>error: Failed dependencies:
+    perl(JSON::XS) is needed by clickhouse-test-19.5.3.8-1.el7.x86_64</code></pre><p>这个其实不是很重要,rpm包中有一个存放了test数据的包，即使不安装也可以使用clickhouse服务.<br>直接删掉clickhouse-test-*的那个包就可以了</p>
+<hr>
+<h2 id="clickhouse的重要目录"><a href="#clickhouse的重要目录" class="headerlink" title="clickhouse的重要目录"></a>clickhouse的重要目录</h2><p>安装后的主要目录</p>
+<ul>
+<li>/etc/clickhouse-server 服务配置文件目录</li>
+<li>/etc/clickclient 客户端配置文件目录</li>
+<li>/var/lib/clickhouse 默认数据目录</li>
+<li>/var/log/clickhouse-server 日志目录</li>
+<li>/etc/init.d/clickhouse-server shell脚本</li>
+<li>/etc/security/limits.d/clickhouse.conf 最大文件打开数</li>
+<li>/etc/cron.d/clickhouse-server 定时服务配置</li>
+<li>/usr/bin   主程序可执行文件目录</li>
+</ul>
+<p>当然现在直接使用下列命令就可以进行单机的运行了</p>
+<pre><code>service clickhouse-server start </code></pre><p>为了部署集群服务，我们需要做以下几件事</p>
+<ul>
+<li>复制若干份/etc/init.d/clickhouse-server下的脚本作为实例启动脚本<ul>
+<li>修改脚本对应配置文件位置</li>
+</ul>
+</li>
+<li>复制若干份/etc/clickhouse-server下的服务配置文件<ul>
+<li>修改默认数据目录</li>
+<li>修改日志目录</li>
+<li>修改集群配置</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2 id="clickhouse的基本配置"><a href="#clickhouse的基本配置" class="headerlink" title="clickhouse的基本配置"></a>clickhouse的基本配置</h2><p>接下来我们以配置一份单机运行的clickhouse示例对clickhouse单机配置进行说明<br>在/opt下新建一个clickhouse的目录</p>
+<pre><code>mkdir /opt/clickhouse/clickhouse_1</code></pre><p>复制一份脚本到该目录下</p>
+<pre><code>cp /etc/init.d/clickhouse-server /opt/clickhouse/clickhouse_1/clickhouse-server</code></pre><p>复制config.xml和user.xml到该目录下<br><strong>注意，缺失user.xml文件会导致无法启动脚本</strong></p>
+<pre><code>cp /etc/clickhouse-server/config.xml /opt/clickhouse/clickhouse_1/config.xml
+cp /etc/clickhouse-server/user.xml /opt/clickhouse/clickhouse_1/user.xml</code></pre><p>新建数据目录</p>
+<pre><code>mkdir /data/clickhouse
+mkdir /data/clickhouse/clickhouse_1/clickhouse_data
+mkdir /data/clickhouse/clickhouse_1/clickhouse_tmp
+mkdir /data/clickhouse/clickhouse_1/clickhosue_log
+mkdir /data/clickhouse/clickhouse_1/user_files</code></pre><p>首先修改clickhouse-server中的配置，需要修改的是：</p>
+<ul>
+<li>CLICKHOUSE_CONFDIR //脚本所在目录</li>
+<li>CLICKHOUSE_CONFIG  //配置文件所在目录</li>
+<li>CLICKHOUSE_PIDFILE //pid文件名   </li>
+</ul>
+<p>其他的配置都可以被config.xml中的配置所覆盖</p>
+<p>示例：</p>
+<pre><code>CLICKHOUSE_USER=clickhouse
+CLICKHOUSE_GROUP=${CLICKHOUSE_USER}
+SHELL=/bin/bash
+PROGRAM=clickhouse-server
+CLICKHOUSE_GENERIC_PROGRAM=clickhouse
+CLICKHOUSE_PROGRAM_ENV=&quot;&quot;
+EXTRACT_FROM_CONFIG=${CLICKHOUSE_GENERIC_PROGRAM}-extract-from-config
+CLICKHOUSE_CONFDIR=/opt/clickhouse/clickhouse_1
+CLICKHOUSE_LOGDIR=/var/log/clickhouse-server
+CLICKHOUSE_LOGDIR_USER=root
+CLICKHOUSE_DATADIR_OLD=/opt/clickhouse
+CLICKHOUSE_DATADIR=/var/lib/clickhouse
+LOCALSTATEDIR=/var/lock
+CLICKHOUSE_BINDIR=/usr/bin
+CLICKHOUSE_CRONFILE=/etc/cron.d/clickhouse-server
+CLICKHOUSE_CONFIG=$CLICKHOUSE_CONFDIR/config.xml
+LOCKFILE=$LOCALSTATEDIR/$PROGRAM
+RETVAL=0
+
+CLICKHOUSE_PIDDIR=/var/run/$PROGRAM
+CLICKHOUSE_PIDFILE=&quot;$CLICKHOUSE_PIDDIR/$PROGRAM.1.pid&quot;</code></pre><p>修改config.xml <strong>单机运行配置和集群配置不同</strong><br>修改http端口和tcp端口</p>
+<pre><code>&lt;http_port&gt;8123&lt;/http_port&gt;
+&lt;tcp_port&gt;9005&lt;/tcp_port&gt;</code></pre><p>修改同步端口</p>
+<pre><code>&lt;interserver_http_port&gt;9009&lt;/interserver_http_port&gt;</code></pre><p>修改数据地址、临时地址、用户数据地址</p>
+<pre><code>&lt;!-- Path to data directory, with trailing slash. --&gt;
+&lt;path&gt;/data/clickhouse/clickhouse_1/clickhouse_data/&lt;/path&gt;
+
+&lt;!-- Path to temporary data for processing hard queries. --&gt;
+&lt;tmp_path&gt;/data/clickhouse/clickhouse_1/clickhouse_tmp/&lt;/tmp_path&gt;
+
+&lt;!-- Directory with user provided files that are accessible by &apos;file&apos; table function. --&gt;
+&lt;user_files_path&gt;/data/clickhouse/clickhouse_1/user_files/&lt;/user_files_path&gt;</code></pre><p>cd到clickhouse目录下，就可以使用脚本启动clickhouse了</p>
+<pre><code>cd /opt/clickhouse/clickhouse_1
+chmod a+x clickhouse-server
+./clickhouse-server start</code></pre><p>查看日志文件：<strong>如果可以，请修改日志文件的地址，放在之前新建的目录下</strong></p>
+<pre><code>tail -n 20 /var/log/clickhouse-server/clickhouse-server.log</code></pre><p>连接数据库</p>
+<pre><code>clickhouse-client --port 9005</code></pre><h1 id="Clickhouse的集群部署方式"><a href="#Clickhouse的集群部署方式" class="headerlink" title="Clickhouse的集群部署方式"></a>Clickhouse的集群部署方式</h1><h2 id="zookeeper-部署"><a href="#zookeeper-部署" class="headerlink" title="zookeeper 部署"></a>zookeeper 部署</h2><p>Clickhoused的集群依赖于zookeeper，这里简要描述三台主机作为集群部署zookeeper的过程<br>下载zookeeper压缩文件<br>地址：<a href="https://zookeeper.apache.org/release.html" target="_blank" rel="noopener">https://zookeeper.apache.org/release.html</a><br><strong>注意：请确认您的服务器具备java环境</strong><br><strong>注意：请下载带有bin的压缩包版本，否则会有依赖库问题</strong><br> <img src="/img/%E5%8E%8B%E7%BC%A9%E5%8C%85.jpg" alt="压缩包"><br>解压压缩包</p>
+<pre><code>tar -zvf *-3.5.5-bin.tar.gz</code></pre><p>移动至/opt目录下</p>
+<pre><code>cp -r *-3.5.5-bin /opt/zookeeper</code></pre><p>bin目录下是zookeeper的脚本，conf目录下是配置文件<br>复制配置文件</p>
+<pre><code>cd /opt/zookeeper/conf
+cp zoo-sample.cfg zoo.cfg</code></pre><p>修改配置文件，所有机器配置文件保持一致</p>
+<pre><code># The number of milliseconds of each tick
+tickTime=2000
+# The number of ticks that the initial 
+# synchronization phase can take
+initLimit=10
+# The number of ticks that can pass between 
+# sending a request and getting an acknowledgement
+syncLimit=5
+# the directory where the snapshot is stored.
+# do not use /tmp for storage, /tmp here is just 
+# example sakes.
+dataDir=/data/zookeeper
+# the port at which the clients will connect
+clientPort=2181
+server.41=10.122.70.154:2888:3888 
+server.42=10.122.70.222:2888:3888
+server.43=10.122.70.21:2888:3888</code></pre><p><strong>请务必注意，配置文件最后几行的ip和端口末尾不要有空格</strong><br>新建数据目录</p>
+<pre><code>mkdir /data/zookeeper</code></pre><p>写myid文件,这个文件是zookeeper用于确认自己是哪一个节点</p>
+<pre><code>vim /data/zookeeper/myid</code></pre><p>比如我这里设置,10.122.70.154 这台机器是server.41,你那么就往里面写41<br>cd到目录下，启动就好</p>
+<pre><code>cd /opt/zookeeper/bin
+./zkServer start</code></pre><p>如果无法启动,可以使用以下指令查看zookeeper启动信息</p>
+<pre><code>./zkServer start-foreground</code></pre><p>前台启动zookeeper，可以看到报错信息<br>然后把zookeeper整个目录部署到其他机器上，修改myid就可以建立zookeeper集群   使用status查看运行情况</p>
+<pre><code>./zkServer status</code></pre><hr>
+<h2 id="Clickhouse-高可用集群方案"><a href="#Clickhouse-高可用集群方案" class="headerlink" title="Clickhouse 高可用集群方案"></a>Clickhouse 高可用集群方案</h2><p>我们来稍微说一下ck的引擎</p>
+<blockquote>
+<p>CK里的引擎有十几个，这里只推荐3个：</p>
+<ul>
+<li>MergeTree，是CK里最Advanced的引擎，性能超高，单机写入可以达到50w峰值，查询性能非常快</li>
+<li>ReplicatedMergeTree，基于MergeTree，同时引入ZK，做了复制</li>
+<li>Distributed，分布式引擎，本身不存储数据，可认为就是一张View，如果写入，会把请求丢到集群里的节点（有算法控制），如果查询，会帮你做查询转发再聚合返回</li>
+</ul>
+</blockquote>
+<hr>
+<h3 id="简单分布式方案"><a href="#简单分布式方案" class="headerlink" title="简单分布式方案"></a>简单分布式方案</h3><h4 id="MergeTree-Distributed"><a href="#MergeTree-Distributed" class="headerlink" title="MergeTree + Distributed"></a>MergeTree + Distributed</h4><pre><code>CREATE TABLE db.tb (date Date, ……) ENGINE = MergeTree(date, (date, hour, datetime), 8192)
+
+CREATE TABLE db.tb_all (date Date, ……) ENGINE = Distributed(bip_ck_cluster, &apos;ck_test&apos;, &apos;dagger&apos;, rand())&quot;</code></pre><p>db.tb为本地表，数据只是在本地<br>db.tb_all为分布式表，查询这个表，引擎自动把整个集群数据计算后返回</p>
+<hr>
+<h3 id="高可用分布式方案"><a href="#高可用分布式方案" class="headerlink" title="高可用分布式方案"></a>高可用分布式方案</h3><blockquote>
+<p>这里说的高可用是指，每个分片具有2个或以上副本<br>当某个节点挂掉时，该节点分片仍可以由其他机器上的副本替代工作，所以这样实现的分布式集群可以在挂掉至少1个节点时机器正常运行，随着集群节点数量的增加，则集群挂掉2个节点或以上可提供服务的概率也越大，至少能避免单点故障问题，集群的稳定性也更高.<br>clickhouse集群的理想方案是如下所示：<br><img src="/img/734555-20180723084839471-1357957382.png" alt="高可用集群理想方案"><br>这里有3个集群，每个集群n个节点，每个节点的数据依靠zookeeper协调同步，比如cluster1提供服务，如果cluster1里面挂掉多台机器那么cluster2的副本可以切换过来提供服务，如果cluster2的分片再挂了，那么cluster3中的副本也可以提供服务，cluster1~3同时挂掉的概率就非常小了，所以集群的稳定性可以非常高，其中单个集群的节点个数n决定了clickhouse的性能，性能是可以线性扩展的，具体副本集群的个数根据机器资源配置.</p>
+</blockquote>
+<p>以上是基于多集群的方式，接下来我们主要讲解如何部署一个单独的clickhouse集群。</p>
+<hr>
+<h2 id="clickhouse-单集群高可用方案部署"><a href="#clickhouse-单集群高可用方案部署" class="headerlink" title="clickhouse 单集群高可用方案部署"></a>clickhouse 单集群高可用方案部署</h2><p><strong>基于ReplicatedMergeTree + Distributed + zookeeper</strong><br>3个节点<br>每个节点的tcp 9000对外提供服务，9001提供副本，其中2提供1的备份，3提供2的备份，1提供3的备份，这样假设挂掉1个节点，集群也可以正常使用，但是挂掉2个，就不正常了。<br>示意图：<br><img src="./img/734555-20180723114647876-24433769.png" alt="单集群示意图"></p>
+<h3 id="clickhouse-单集群高可用方案部署过程"><a href="#clickhouse-单集群高可用方案部署过程" class="headerlink" title="clickhouse 单集群高可用方案部署过程"></a>clickhouse 单集群高可用方案部署过程</h3><p>在这里，我们首先先列出测试环境和配置信息  </p>
+<table>
+<thead>
+<tr>
+<th>hostname</th>
+<th>tcp 端口</th>
+<th>http 端口</th>
+<th>asyn 端口</th>
+<th>ip</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>click.server.rtm1</td>
+<td>tcp 9005</td>
+<td>http 8123</td>
+<td>asyn 9009</td>
+<td>10.122.70.154</td>
+</tr>
+<tr>
+<td>click.server.rtm1</td>
+<td>tcp 9015</td>
+<td>http 8321</td>
+<td>asyn 9019</td>
+<td>10.122.70.154</td>
+</tr>
+<tr>
+<td>click.server.rtm2</td>
+<td>tcp 9025</td>
+<td>http 8124</td>
+<td>asyn 9009</td>
+<td>10.122.70.222</td>
+</tr>
+<tr>
+<td>click.server.rtm2</td>
+<td>tcp 9035</td>
+<td>http 8421</td>
+<td>asyn 9019</td>
+<td>10.122.70.222</td>
+</tr>
+<tr>
+<td>click.server.rtm3</td>
+<td>tcp 9045</td>
+<td>http 8125</td>
+<td>asyn 9009</td>
+<td>10.122.70.21</td>
+</tr>
+<tr>
+<td>click.server.rtm3</td>
+<td>tcp 9055</td>
+<td>http 8521</td>
+<td>asyn 9019</td>
+<td>10.122.70.21</td>
+</tr>
+</tbody></table>
+<p>所有节点开放对应端口   </p>
+<p>我们以click.server.rtm1为例，描述如何配置两个clickhouse示例<br>首先请复制每台主机上的clickhouse文件夹，并按照<strong>单机配置方式</strong>配置所有示例</p>
+<pre><code>cp -r /opt/clickhouse/clickhouse_1 /opt/clickhouse/clickhouse_2
+//根据之前的描述和上述配置信息配置好每个实例</code></pre><p>我们先修改最重要的部分，<strong>集群分片配置</strong>，整个配置所有的节点的所有示例要完全保持一致</p>
+<pre><code> &lt;remote_servers&gt;
+    &lt;!-- Test only shard config for testing distributed storage --&gt;
+    &lt;distable&gt;
+        &lt;shard&gt;
+            &lt;!-- Optional. Shard weight when writing data. Default: 1. --&gt;
+            &lt;weight&gt;1&lt;/weight&gt;
+            &lt;!-- Optional. Whether to write data to just one of the replicas. Default: false (write data to all replicas). --&gt;
+            &lt;internal_replication&gt;true&lt;/internal_replication&gt;
+            &lt;replica&gt;
+                &lt;host&gt;click.server.rtm1&lt;/host&gt;
+                &lt;port&gt;9005&lt;/port&gt;
+            &lt;/replica&gt;
+            &lt;replica&gt;
+                &lt;host&gt;click.server.rtm2&lt;/host&gt;
+                &lt;port&gt;9035&lt;/port&gt;
+            &lt;/replica&gt;
+        &lt;/shard&gt;
+        &lt;shard&gt;
+            &lt;weight&gt;1&lt;/weight&gt;
+            &lt;internal_replication&gt;true&lt;/internal_replication&gt;
+            &lt;replica&gt;
+                &lt;host&gt;click.server.rtm2&lt;/host&gt;
+                &lt;port&gt;9025&lt;/port&gt;
+            &lt;/replica&gt;
+            &lt;replica&gt;
+                &lt;host&gt;click.server.rtm3&lt;/host&gt;
+                &lt;port&gt;9055&lt;/port&gt;
+            &lt;/replica&gt;
+        &lt;/shard&gt;
+        &lt;shard&gt;
+            &lt;weight&gt;1&lt;/weight&gt;
+            &lt;internal_replication&gt;true&lt;/internal_replication&gt;
+            &lt;replica&gt;
+                &lt;host&gt;click.server.rtm3&lt;/host&gt;
+                &lt;port&gt;9045&lt;/port&gt;
+            &lt;/replica&gt;
+            &lt;replica&gt;
+                &lt;host&gt;click.server.rtm1&lt;/host&gt;
+                &lt;port&gt;9015&lt;/port&gt;
+            &lt;/replica&gt;
+        &lt;/shard&gt;
+    &lt;/distable&gt;
+&lt;/remote_servers&gt;</code></pre><p>注意事项</p>
+<ul>
+<li>配置里面的&lt;distable&gt;是分布式标识标签，可以自定义，到最后创建分布式表的时候会用到</li>
+<li>weight是分片权重，即写数据时有多大的概率落到此分片，因为这里所有分片权重相同所有都设置为1</li>
+<li>internal_replication，表示是否只将数据写入其中一个副本，默认为false，表示写入所有副本，在复制表的情况下可能会导致重复和不一致，所以这里一定要改为true。clickhouse分布式表只管写入一个副本，其余同步表的事情交给复制表和zookeeper来进行</li>
+<li>replica是一个分片下的所有副本，这里副本的分布一定要手动设计好，保证相互备份</li>
+<li>官网配置：<a href="https://clickhouse.yandex/docs/en/operations/table_engines/distributed/" target="_blank" rel="noopener">https://clickhouse.yandex/docs/en/operations/table_engines/distributed/</a></li>
+<li><strong>请务必使用hostname，并在所有/etc/hosts下加入对应的host规则，否则<del>可能</del>一定导致zookeeper无法同步复制表信息！！！！</strong></li>
+</ul>
+<p><strong>zookeeper配置</strong>所有实例配置都一样：  </p>
+<pre><code>&lt;zookeeper&gt;
+    &lt;node index=&quot;41&quot;&gt;
+        &lt;host&gt;10.122.70.154&lt;/host&gt;
+        &lt;port&gt;2181&lt;/port&gt;
+    &lt;/node&gt;
+    &lt;node index=&quot;42&quot;&gt;
+        &lt;host&gt;10.122.70.222&lt;/host&gt;
+        &lt;port&gt;2181&lt;/port&gt;
+    &lt;/node&gt;
+    &lt;node index=&quot;43&quot;&gt;
+        &lt;host&gt;10.122.70.21&lt;/host&gt;
+        &lt;port&gt;2181&lt;/port&gt;
+    &lt;/node&gt;
+&lt;/zookeeper&gt;</code></pre><p>这个使用ip地址就可以了，实测没有关系</p>
+<p>然后是<strong>复制标识的配置</strong>，也称为宏配置，这里唯一标识一个副本名称，每个实例都要配置并且都是唯一的，这里配置如下：<br>click.server.rtm1 实例1</p>
+<pre><code>&lt;macros&gt;
+    &lt;layer&gt;01&lt;/layer&gt;
+    &lt;shard&gt;01&lt;/shard&gt;
+    &lt;replica&gt;cluster01-01-1&lt;/replica&gt;
+&lt;/macros&gt;</code></pre><p>click.server.rtm1 实例2</p>
+<pre><code>&lt;macros&gt;
+    &lt;layer&gt;01&lt;/layer&gt;
+    &lt;shard&gt;03&lt;/shard&gt;
+    &lt;replica&gt;cluster01-03-2&lt;/replica&gt;
+&lt;/macros&gt;</code></pre><p>click.server.rtm2 实例1</p>
+<pre><code>&lt;macros&gt;
+    &lt;layer&gt;01&lt;/layer&gt;
+    &lt;shard&gt;01&lt;/shard&gt;
+    &lt;replica&gt;cluster01-02-1&lt;/replica&gt;
+&lt;/macros&gt;</code></pre><p>click.server.rtm2 实例2</p>
+<pre><code>&lt;macros&gt;
+    &lt;layer&gt;01&lt;/layer&gt;
+    &lt;shard&gt;01&lt;/shard&gt;
+    &lt;replica&gt;cluster01-01-2&lt;/replica&gt;
+&lt;/macros&gt;</code></pre><p>click.server.rtm3 实例1</p>
+<pre><code>&lt;macros&gt;
+    &lt;layer&gt;01&lt;/layer&gt;
+    &lt;shard&gt;01&lt;/shard&gt;
+    &lt;replica&gt;cluster01-03-1&lt;/replica&gt;
+&lt;/macros&gt;</code></pre><p>click.server.rtm3 实例2</p>
+<pre><code>&lt;macros&gt;
+    &lt;layer&gt;01&lt;/layer&gt;
+    &lt;shard&gt;02&lt;/shard&gt;
+    &lt;replica&gt;cluster01-02-2&lt;/replica&gt;
+&lt;/macros&gt;</code></pre><p>注意事项</p>
+<ul>
+<li>&lt;layer&gt;标签表示集群标识，因为只用一个集群，我们设置为1</li>
+<li>&lt;shard&gt;标签标识分片标识，即这个实例存储的是哪一个分片数据</li>
+<li>&lt;replica&gt;是副本标识，这里使用了cluster{layer}-{shard}-{replica}的表示方式，比如cluster01-02-1表示cluster01集群的02分片下的1号副本</li>
+<li>参考文档：<a href="https://clickhouse.yandex/docs/en/operations/table_engines/replication/" target="_blank" rel="noopener">https://clickhouse.yandex/docs/en/operations/table_engines/replication/</a></li>
+</ul>
+<p><strong>有很多教程到这里就结束了，但是实际上这样子的xml是无法使用的，还有以下步骤</strong></p>
+<p><strong>运行远程访问</strong>，这一点很重要，你可以使用以下命令进行远程访问</p>
+<pre><code>clickhouse-client --host 10.122.70.22 --port 9025 </code></pre><p>但有时候会有这样的报错信息</p>
+<pre><code>[root@sco-poc-rtm2 bin]# clickhouse-client --host 10.122.70.154 --port 9025
+ClickHouse client version 19.5.3.1.
+Connecting to 10.122.70.154:9025 as user default.
+Code: 210. DB::NetException: Connection refused (10.122.70.154:9025)</code></pre><p>甚至于使用ip自己访问自己都会被拒绝，这是因为xml里没有打开监听端口所导致的<br>我们需要打开监听端口：  </p>
+<pre><code>&lt;!-- Listen specified host. use :: (wildcard IPv6 address), if you want to accept connections both with IPv4 and IPv6 from everywhere. --&gt;
+&lt;listen_host&gt;::&lt;/listen_host&gt;</code></pre><p><strong>http本地域名</strong>，设置这个的目的是为了使用复制表，若想使用复制表，必须添加这个项</p>
+<p>click.server.rtm1 实例1 与 实例2</p>
+<pre><code>&lt;interserver_http_host&gt;click.server.rtm1&lt;/interserver_http_host&gt;</code></pre><p>click.server.rtm2 实例1 与 实例2</p>
+<pre><code>&lt;interserver_http_host&gt;click.server.rtm2&lt;/interserver_http_host&gt;</code></pre><p>click.server.rtm3 实例1 与 实例2</p>
+<pre><code>&lt;interserver_http_host&gt;click.server.rtm3&lt;/interserver_http_host&gt;</code></pre><p><strong>使用host</strong>，之前已经说过，但还是要再说一下！</p>
+<p>完整xml示例见最后   </p>
+<p>创建本地复制表和分布式表      </p>
+<p>所有实例配置完上面这些之后，分别执行启动命令启动，然后所有实例都执行下面语句创建数据库： </p>
+<pre><code>CREATE DATABASE monchickey;</code></pre><p>然后对于所有实例分别创建对应的复制表，这里测试创建一个简单的表<br>click.server.rtm1 实例1</p>
+<pre><code>CREATE TABLE monchickey.image_label ( label_id UInt32,  label_name String,  insert_time Date) ENGINE = ReplicatedMergeTree(&apos;/clickhouse/tables/01-01/image_label&apos;,&apos;cluster01-01-1&apos;,insert_time, (label_id, insert_time), 8192)</code></pre><p>click.server.rtm1 实例2</p>
+<pre><code>CREATE TABLE monchickey.image_label ( label_id UInt32,  label_name String,  insert_time Date) ENGINE = ReplicatedMergeTree(&apos;/clickhouse/tables/01-03/image_label&apos;,&apos;cluster01-03-2&apos;,insert_time, (label_id, insert_time), 8192)</code></pre><p>click.server.rtm2 实例1</p>
+<pre><code>CREATE TABLE monchickey.image_label ( label_id UInt32,  label_name String,  insert_time Date) ENGINE = ReplicatedMergeTree(&apos;/clickhouse/tables/01-02/image_label&apos;,&apos;cluster01-02-1&apos;,insert_time, (label_id, insert_time), 8192)</code></pre><p>click.server.rtm2 实例2</p>
+<pre><code>CREATE TABLE monchickey.image_label ( label_id UInt32,  label_name String,  insert_time Date) ENGINE = ReplicatedMergeTree(&apos;/clickhouse/tables/01-01/image_label&apos;,&apos;cluster01-01-2&apos;,insert_time, (label_id, insert_time), 8192)</code></pre><p>click.server.rtm3 实例1</p>
+<pre><code>CREATE TABLE monchickey.image_label ( label_id UInt32,  label_name String,  insert_time Date) ENGINE = ReplicatedMergeTree(&apos;/clickhouse/tables/01-03/image_label&apos;,&apos;cluster01-03-1&apos;,insert_time, (label_id, insert_time), 8192)</code></pre><p>click.server.rtm3 实例2</p>
+<pre><code>CREATE TABLE monchickey.image_label ( label_id UInt32,  label_name String,  insert_time Date) ENGINE = ReplicatedMergeTree(&apos;/clickhouse/tables/01-02/image_label&apos;,&apos;cluster01-02-2&apos;,insert_time, (label_id, insert_time), 8192)</code></pre><p>注意事项：</p>
+<ul>
+<li>核心的地方是同一个分片在zookeeper上面的znode相同</li>
+<li>包含数据表的多个副本，当一个副本写入数据时会自动触发同步操作.</li>
+</ul>
+<p>创建完上面复制表之后，可以创建分布式表</p>
+<pre><code>CREATE TABLE image_label_all AS image_label ENGINE = Distributed(distable, monchickey, image_label, rand())    </code></pre><p>注意事项：</p>
+<ul>
+<li>分布式表一般用本地表加all</li>
+<li>distable就是上面xml配置中的标签名称</li>
+<li>rand()表示向分布式表插入数据时，将随机插入到副本</li>
+</ul>
+<p>上面就是clickhouse高可用集群的基本配置</p>
+<hr>
+<h1 id="常见问题"><a href="#常见问题" class="headerlink" title="常见问题"></a>常见问题</h1><h2 id="zookeeper-数据缺失导致表只读"><a href="#zookeeper-数据缺失导致表只读" class="headerlink" title="zookeeper 数据缺失导致表只读"></a>zookeeper 数据缺失导致表只读</h2><p>这个是个很常见的情况，当进行zookeeper迁移的时候请务必将zookeeper下的目录文件一并迁移。<br>否则整个数据库会变成一个只读表。  </p>
+<hr>
+<h2 id="待补充"><a href="#待补充" class="headerlink" title="待补充"></a>待补充</h2>
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/07/20/hello-world/" rel="next" title="Hello World">
+                <i class="fa fa-chevron-left"></i> Hello World
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">APTXOUS</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">2</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Clickhouse部署高可用集群"><span class="nav-number">1.</span> <span class="nav-text">Clickhouse部署高可用集群</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Clickhouse简介"><span class="nav-number">2.</span> <span class="nav-text">Clickhouse简介</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Clickhouse的安装方式"><span class="nav-number">3.</span> <span class="nav-text">Clickhouse的安装方式</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#使用rpm进行ClickHouse的安装"><span class="nav-number">3.1.</span> <span class="nav-text">使用rpm进行ClickHouse的安装</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#clickhouse的重要目录"><span class="nav-number">3.2.</span> <span class="nav-text">clickhouse的重要目录</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#clickhouse的基本配置"><span class="nav-number">3.3.</span> <span class="nav-text">clickhouse的基本配置</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Clickhouse的集群部署方式"><span class="nav-number">4.</span> <span class="nav-text">Clickhouse的集群部署方式</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#zookeeper-部署"><span class="nav-number">4.1.</span> <span class="nav-text">zookeeper 部署</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Clickhouse-高可用集群方案"><span class="nav-number">4.2.</span> <span class="nav-text">Clickhouse 高可用集群方案</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#简单分布式方案"><span class="nav-number">4.2.1.</span> <span class="nav-text">简单分布式方案</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#MergeTree-Distributed"><span class="nav-number">4.2.1.1.</span> <span class="nav-text">MergeTree + Distributed</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#高可用分布式方案"><span class="nav-number">4.2.2.</span> <span class="nav-text">高可用分布式方案</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#clickhouse-单集群高可用方案部署"><span class="nav-number">4.3.</span> <span class="nav-text">clickhouse 单集群高可用方案部署</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#clickhouse-单集群高可用方案部署过程"><span class="nav-number">4.3.1.</span> <span class="nav-text">clickhouse 单集群高可用方案部署过程</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#常见问题"><span class="nav-number">5.</span> <span class="nav-text">常见问题</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#zookeeper-数据缺失导致表只读"><span class="nav-number">5.1.</span> <span class="nav-text">zookeeper 数据缺失导致表只读</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#待补充"><span class="nav-number">5.2.</span> <span class="nav-text">待补充</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">APTXOUS</span>
+
+  
+</div>
+<!--
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+-->
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Muse</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
